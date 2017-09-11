@@ -12,9 +12,11 @@ typedef struct {
 	unsigned long v_msize;
 	unsigned int segment_num;
 	unsigned int segment_size;
-	unsigned int miss;
-	unsigned int fails;
-	unsigned long hits;
+	/* unsigned int miss; */
+	/* unsigned int fails; */
+	/* unsigned long hits; */
+	unsigned long k_offset;
+	unsigned long v_offset;
 } c_shared_header;
 
 typedef struct {
@@ -22,11 +24,12 @@ typedef struct {
 	pthread_rwlock_t wlock;
 	unsigned int pos;
 	unsigned int size;
-	void *p;
+	unsigned long s_offset;
 } c_shared_segment;
 
 typedef struct {
-	void *data;
+	unsigned long offset;
+	unsigned int segment_index;
 	unsigned int len;
 	unsigned long atime;
 } c_kv_val;
@@ -40,7 +43,7 @@ typedef struct {
 	unsigned int len;
 	/* unsigned int flag; */
 	unsigned char key[C_STORAGE_MAX_KEY_LEN];
-	c_kv_val *val;
+	c_kv_val val;
 } c_kv_key;
 
 int c_storage_startup(unsigned int k_size, unsigned int v_size, unsigned char **msg);
