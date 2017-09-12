@@ -4,12 +4,15 @@
 #define C_STORAGE_H
 
 #define C_STORAGE_MAX_KEY_LEN (48)
+#define C_STORAGE_MIN_SEGMENT_SIZE (8*1024*1024)
+#define C_STORAGE_MAX_SEGMENT_SIZE (128*1024*1024)
+
 
 typedef struct {
 	pthread_rwlock_t rlock;
 	pthread_rwlock_t wlock;
-	unsigned long k_msize;
-	unsigned long v_msize;
+	unsigned long k_size;
+	unsigned long v_size;
 	unsigned int segment_num;
 	unsigned int segment_size;
 	/* unsigned int miss; */

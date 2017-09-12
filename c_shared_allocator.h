@@ -4,12 +4,20 @@
 
 #define USE_MMAP 1
 
-#define C_CACHE_ALIGNMENT 			8
-#define C_CACHE_ALIGNMENT_MARK		~(C_CACHE_ALIGNMENT - 1)
+#define C_ALLOC_ALIGNMENT 					8
+#define C_ALLOC_ALIGNMENT_MARK				~(C_ALLOC_ALIGNMENT - 1)
 
-#define C_CACHE_FILE_MODEL			0660
+#define C_ALLOC_FILE_MODEL					(S_IRUSR | S_IWUSR | S_IRGPR | S_IWGPR)
+#define C_ALLOC_FILE_OPEN_CREAT_FLAG		(O_CREAT | O_EXCL | O_RDWR)
+#define C_ALLOC_FILE_OPEN_FLAG				(O_RDWR)
 
-#define C_CACHE_ALIGNED_SIZE(x)		(((x) + C_CACHE_ALIGNMENT - 1) & C_CACHE_ALIGNMENT_MARK)
+#ifdef USE_MMAP
+	#define MMAP_FAIL						((void*)-1)	
+#else 
+	#error(no builtin shared memory supported)	
+#endif /* USE_MMAP */				
+
+#define C_ALLOC_ALIGNED_SIZE(x)				(((x) + C_ALLOC_ALIGNMENT - 1) & C_ALLOC_ALIGNMENT_MARK)
 
 int c_cache_allocator_startup();
 void c_cache_allocator_shutdown();
