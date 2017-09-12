@@ -24,11 +24,9 @@ typedef struct {
 } c_shared_header;
 
 typedef struct {
-	pthread_rwlock_t rlock;
-	pthread_rwlock_t wlock;
 	unsigned int pos;
 	unsigned int size;
-	unsigned long s_offset;
+	void *p;
 } c_shared_segment;
 
 typedef struct {

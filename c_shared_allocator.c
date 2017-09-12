@@ -10,29 +10,6 @@
 	#error(no builtin shared memory supported)	
 #endif
 
-int c_cache_allocator_startup(void **p, c_shared_header **shared_header, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in) {
-	int ret = 0, try = 0;
-	int create = 0;
-	pthread_rwlockattr_t rwattr;
-
-
-	ret = create_segments(p, shared_name, &k_size, &v_size, &create, error_in);
-
-	if(ret == C_CACHE_FAIL) {
-		goto error;
-	}
-
-	if(create == 1) {
-		goto new;
-	} else {
-		goto exist;
-	}
-
-new:	
+int c_cache_allocator_startup(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in) {
 	
-
-exist:
-
-error:
-	return C_CACHE_FAIL;
 }

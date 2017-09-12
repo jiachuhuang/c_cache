@@ -14,18 +14,18 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-static int create_segments(void **p, const char *shared_name, unsigned long *k_size, unsigned long *v_size, unsigned int *create, char **error_in) {
-	unsigned long alloc_size, header_size;
+static int create_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in) {
+	unsigned long header_size, alloc_size, segment_size, segments_num = 1024, v_offset;
 	int fd;
-	int try = 0;
+	int try = 0, create;
 
-	// pthread_rwlockattr_t rwattr;
+	pthread_rwlockattr_t rwattr;
 
-	*k_size = C_ALLOC_ALIGNED_SIZE(*k_size);
-	*v_size = C_ALLOC_ALIGNED_SIZE(*v_size);
+	k_size = C_ALLOC_ALIGNED_SIZE(k_size);
+	v_size = C_ALLOC_ALIGNED_SIZE(v_size);
 	header_size = (unsigned long)sizeof(c_shared_header);
 
-	alloc_size = header_size + *k_size + *v_size;
+	alloc_size = header_size + k_size + v_size;
 
 again:
 	if(try > 3) {
@@ -41,11 +41,12 @@ again:
 		*error_in = "open";
 		goto error;
 	} else {
-		*create = 1;
 		goto new;
 	}
 
 new:
+	create = 1;
+
 	if(ftruncate(fd, alloc_size) == -1) {
 		*error_in = "ftruncate";
 		goto error;
@@ -59,28 +60,73 @@ new:
 
 	close(fd);
 
+	while ((v_size / segments_num) < C_STORAGE_MIN_SEGMENT_SIZE) {
+		segments_num >>= 1;
+	}
+
+	segment_size = v_size / segments_num;
+	++segments_num;
+
+
 	// init shared header
-	// *shared_header = (c_shared_header *)*p;
+	*shared_header = (c_shared_header *)*p;
 	
-	// *shared_header->k_size = k_size;
-	// *shared_header->v_size = v_size;
+	*shared_header->init = 0;
 
-	// *shared_header->segment_num = shared_segment_num;
-	// *shared_header->segment_size = segment_size;
+	*shared_header->k_size = k_size;
+	*shared_header->v_size = v_size;
 
-	// *shared_header->k_offset = (unsigned long)sizeof(c_shared_header);
-	// *shared_header->v_offset = *shared_header->k_offset + *shared_header->k_size;
+	*shared_header->segment_num = segments_num;
+	*shared_header->segment_size = segment_size;
 
-	// if(pthread_rwlockattr_init(&rwattr) != 0) {
-	// 	*error_in = "pthread_rwlockattr_init";
-	// 	goto error;
-	// }
-	// if(pthread_rwlockattr_setpshared(&rwattr, PTHREAD_PROCESS_SHARED) != 0) {
-	// 	*error_in = "pthread_rwlockattr_setpshared";
-	// 	pthread_rwlockattr_destroy(&rwattr);
-	// 	goto error;
-	// }
+	*shared_header->k_offset = (unsigned long)sizeof(c_shared_header);
+	v_offset = *shared_header->v_offset = *shared_header->k_offset + *shared_header->k_size;
 
+	// init header lock
+	if(pthread_rwlockattr_init(&rwattr) != 0) {
+		*error_in = "pthread_rwlockattr_init";
+		goto error;
+	}
+
+	if(pthread_rwlockattr_setpshared(&rwattr, PTHREAD_PROCESS_SHARED) != 0) {
+		*error_in = "pthread_rwlockattr_setpshared";
+		goto pthreaderr;
+	}	
+
+	if(pthread_rwlock_init(&(*shared_header->rlock), &rwattr) != 0) {
+		*error_in = "pthread_rwlock_init";
+		goto pthreaderr;
+	}
+
+	if(pthread_rwlock_init(&(*shared_header->wlock), &rwattr) != 0) {
+		*error_in = "pthread_rwlock_init";
+		pthread_rwlock_destroy(&(*shared_header->rlock));
+		goto pthreaderr;
+	}
+
+	pthread_rwlockattr_destroy(&rwattr);
+
+	*shared_segments = (c_shared_segment *)calloc(1, segments_num * sizeof(c_shared_segment));
+
+	if(!*shared_segments) {
+		*error_in = "calloc";
+		pthread_rwlock_destroy(&(*shared_header->rlock));
+		pthread_rwlock_destroy(&(*shared_header->wlock));
+		goto error;
+	}
+
+	// init shared_segments
+	for (int i = 0; i < segments_num; ++i) {
+		(*shared_segments)[i].pos = 0;
+		(*shared_segments)[i].p = *p + v_offset + i * segment_size;		
+		if( alloc_size >= (v_offset + i * segment_size + segment_size) ) {
+			(*shared_segments)[i].size = segment_size;
+		} else {
+			(*shared_segments)[i].size = alloc_size - (v_offset + i * segment_size);
+		}
+	}
+
+	*shared_header->init = 1;
 	return C_CACHE_OK;
 
 exist:
@@ -100,16 +146,51 @@ exist:
 
 	close(fd);	
 
-	*create = 0;
+	create = 0;
+
+	*shared_header = (c_shared_header *)*p;
+
+	int retry = 3;
+
+	while(retry--) {
+		if(*shared_header->init == 1) {
+			// sleep
+			break;
+		} else if(!retry) {
+			*error_in = "timeout";
+			goto error;
+		}
+	}
+
+	*shared_segments = (c_shared_segment *)calloc(1, segments_num * sizeof(c_shared_segment));
+
+	if(!*shared_segments) {
+		*error_in = "calloc";
+		goto error;
+	}
+
+	// init shared_segments
+	for (int i = 0; i < segments_num; ++i) {
+		(*shared_segments)[i].pos = 0;
+		(*shared_segments)[i].p = *p + v_offset + i * segment_size;		
+		if( alloc_size >= (v_offset + i * segment_size + segment_size) ) {
+			(*shared_segments)[i].size = segment_size;
+		} else {
+			(*shared_segments)[i].size = alloc_size - (v_offset + i * segment_size);
+		}
+	}	
 
 	return C_CACHE_OK;
+
+pthreaderr:
+	pthread_rwlockattr_destroy(&rwattr);
 	
 error:
 	if(fd > 0) {
 		close(fd);
 	}
 
-	if(*create) {
+	if(create) {
 		unlink(shared_name);
 	}
 
