@@ -9,6 +9,7 @@
 
 
 typedef struct {
+	unsigned int init;
 	pthread_rwlock_t rlock;
 	pthread_rwlock_t wlock;
 	unsigned long k_size;

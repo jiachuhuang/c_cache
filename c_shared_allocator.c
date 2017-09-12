@@ -29,7 +29,7 @@ int c_cache_allocator_startup(void **p, c_shared_header **shared_header, const c
 	}
 
 new:	
-
+	
 
 exist:
 
