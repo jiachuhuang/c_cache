@@ -154,12 +154,12 @@ exist:
 
 	while(retry--) {
 		if(*shared_header->init == 1) {
-			// sleep
 			break;
 		} else if(!retry) {
 			*error_in = "timeout";
 			goto error;
 		}
+		usleep(2 * 1000);
 	}
 
 	*shared_segments = (c_shared_segment *)calloc(1, segments_num * sizeof(c_shared_segment));
