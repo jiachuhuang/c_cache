@@ -176,7 +176,9 @@ static inline unsigned int c_storage_crc32(char *data, unsigned int size) /* {{{
 }
 /* }}} */
 
-int c_storage_startup(unsigned int k_size, unsigned int v_size, char **msg) {
+int c_storage_startup(char *shm_filename, unsigned int k_size, unsigned int v_size, char **msg) {
+
+    shared_name = shm_filename;
 
     if(!c_cache_allocator_startup(&p, &shared_header, &shared_segments, shared_name, k_size, v_size, msg)) {
         return C_CACHE_FAIL;
@@ -202,7 +204,7 @@ int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash & (kv_num - 1);
+    k_index = hash % (kv_num - 1);
 
     pthread_rwlock_rdlock(&(shared_header->rlock));
 
@@ -256,7 +258,7 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash & (kv_num - 1);
+    k_index = hash % (kv_num - 1);
 
     pthread_rwlock_wrlock(&(shared_header->wlock));
 
@@ -279,6 +281,12 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
         if(k->crc != c_storage_crc32((char*)v, k->val.len)) {
             USE_FREE(v);
             goto insert;
+        }
+
+        if(k->crc == c_storage_crc32((char*)data, size)) {
+            USE_FREE(v);
+            pthread_rwlock_unlock(&(shared_header->wlock));          
+            return C_CACHE_OK;
         }
 
         if(add) {
@@ -327,7 +335,7 @@ int c_storage_delete(char *key, unsigned int len) {
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash & (kv_num - 1);
+    k_index = hash % (kv_num - 1);
 
     pthread_rwlock_rdlock(&(shared_header->rlock));
 

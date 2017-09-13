@@ -4,6 +4,8 @@
 
 #include <pthread.h>
 
+#include <stdio.h>
+
 #ifdef USE_MMAP
 	#include "c_shared_mmap.c"
 #else 
@@ -31,33 +33,34 @@ void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segm
 	unsigned int segment_num, size, pos;
 	int i, current, max_try;
 
-	current = hash & (segment_num - 1);
+	segment_num = C_STORAGE_SEGMENT_NUM(*shared_header);
+	current = hash % (segment_num - 1);
 
 	max_try = segment_num > 4? 4: segment_num;
 
 	do {
-		if(!(*shared_segments[current]).seg_header) {
+		if(!(*shared_segments)[current].seg_header) {
 			goto newcur;
 		}
-		size = (*shared_segments[current]).seg_header->size;
-		pos = (*shared_segments[current]).seg_header->pos;
+		size = (*shared_segments)[current].seg_header->size;
+		pos = (*shared_segments)[current].seg_header->pos;
 
 		if(real_size >= (size - pos)) {
 			goto found;
 		}
 newcur:
-		current = (current + 1) & (segment_num - 1);	
+		current = (current + 1) % (segment_num - 1);	
 	} while(--max_try);
 
-	(*shared_segments[current]).seg_header->pos = 0;
-	size = (*shared_segments[current]).seg_header->size;
+	(*shared_segments)[current].seg_header->pos = 0;
+	size = (*shared_segments)[current].seg_header->size;
 	pos = 0;
 
 found:
-	(*shared_segments[current]).seg_header->pos = pos + real_size;
+	(*shared_segments)[current].seg_header->pos = pos + real_size;
 	*seg = current;
 	*offset = pos;
-	return (void*) ((*shared_segments[current]).p + pos);
+	return (void*) ((*shared_segments)[current].p + pos);
 }
 
 

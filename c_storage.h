@@ -10,8 +10,8 @@
 
 #define C_STORAGE_MISS(x) (++(x->miss))
 #define C_STORAGE_HITS(x) (++(x->hits))
-#define C_STORAGE_SEGMENT_NUM(x) (x->segment_num)
-#define C_STORAGE_SEGMENT_SIZE(x) (x->segment_size)
+#define C_STORAGE_SEGMENT_NUM(x) ((x)->segment_num)
+#define C_STORAGE_SEGMENT_SIZE(x) ((x)->segment_size)
 
 #define C_STORAGE_CRC_THRESHOLD 256
 
@@ -61,7 +61,7 @@ typedef struct {
 	c_kv_val val;
 } c_kv_key;
 
-int c_storage_startup(unsigned int k_size, unsigned int v_size, char **msg);
+int c_storage_startup(char *shm_filename, unsigned int k_size, unsigned int v_size, char **msg);
 void c_storage_shutdown();
 int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,/* unsigned int *flag,*/ unsigned long tv);
 int c_storage_update(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl,/* unsigned int *flag,*/ unsigned int add, unsigned long tv);

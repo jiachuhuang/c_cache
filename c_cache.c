@@ -7,18 +7,72 @@
 #include <string.h>
 #include <pthread.h>
 
-extern char *shared_name;
+#include <time.h>
+
 extern c_shared_header *shared_header;
 
-int main(int argc, char const *argv[])
-{
+int c_cache_get(char *key, unsigned int len, void **data, unsigned int *size) {
+	time_t tv;
+	tv = time((time_t *)NULL);
+
+	return c_storage_find(key, len, data, size, tv);
+}
+
+int c_cache_set(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl) {
+	time_t tv;
+	tv = time((time_t *)NULL);
+
+	if(ttl <= 0) {
+		ttl = (unsigned int)tv + 2 * 60 * 60;
+	} else {
+		ttl += tv;
+	}
+
+	return c_storage_update(key, len, data, size, ttl, 0, tv);
+}
+
+int main(int argc, char const *argv[]) {
 	char *error;
 	unsigned int ks = 512*1024*1024;
 	unsigned int vs = 1024*1024*1024;
 
-	shared_name = "/tmp/shartest.tmp1";
-	c_storage_startup(ks, vs, &error);
+	c_storage_startup("/tmp/shartest.tmp1", ks, vs, &error);
 	printf("%s\n", error);
-	printf("%d %lu %lu %lu\n", shared_header->segment_num, shared_header->k_offset, shared_header->v_offset, shared_header->k_size);
+	
+	char *key = "abc";
+	void *data;
+	unsigned int size;
+	int ret;
+
+	char resutl[4];
+
+	ret = c_cache_set(key, (unsigned int)strlen(key), (void*)"hjc", strlen("hjc"), 30);
+	printf("set: %d\n", ret);
+	ret = c_cache_get(key, (unsigned int)strlen(key), &data, &size);
+	memcpy(resutl, data, 3);
+	resutl[3] = '\0';
+	printf("get: %s\n", resutl);
+	printf("%d\n", shared_header->segment_num);
+
+	c_storage_shutdown();
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
