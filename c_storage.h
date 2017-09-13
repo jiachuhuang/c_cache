@@ -8,8 +8,8 @@
 #define C_STORAGE_MIN_SEGMENT_SIZE (8*1024*1024)
 #define C_STORAGE_MAX_SEGMENT_SIZE (128*1024*1024)
 
-#define C_STORAGE_MISS(x) (++(x->miss))
-#define C_STORAGE_HITS(x) (++(x->hits))
+#define C_STORAGE_MISS(x) (++((x)->miss))
+#define C_STORAGE_HITS(x) (++((x)->hits))
 #define C_STORAGE_SEGMENT_NUM(x) ((x)->segment_num)
 #define C_STORAGE_SEGMENT_SIZE(x) ((x)->segment_size)
 

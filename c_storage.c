@@ -51,6 +51,7 @@ static inline unsigned int c_cache_hash_func(const char *data, unsigned int len)
 
     return h;
 }
+/* }}} */
 
 /* {{{  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or
  *  code or tables extracted from it, as desired without restriction.
@@ -186,10 +187,12 @@ int c_storage_startup(char *shm_filename, unsigned int k_size, unsigned int v_si
 
     return C_CACHE_OK;
 }
+/* }}} */
 
 void c_storage_shutdown() {
     c_cache_allocator_shutdown(&p, &shared_header, &shared_segments, shared_name);
 }
+/* }}} */
 
 int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,/* unsigned int *flag,*/ unsigned long tv) {
     
@@ -240,6 +243,7 @@ miss:
     pthread_rwlock_unlock(&(shared_header->rlock));
     return C_CACHE_NOTFOUND;
 }
+/* }}} */
 
 int c_storage_update(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl,/* unsigned int *flag,*/ unsigned int add, unsigned long tv) {
 
@@ -325,6 +329,7 @@ insert:
         return C_CACHE_OK;        
     }
 }
+/* }}} */
 
 int c_storage_delete(char *key, unsigned int len) {
 
@@ -353,6 +358,7 @@ int c_storage_delete(char *key, unsigned int len) {
     pthread_rwlock_unlock(&(shared_header->rlock));
     return C_CACHE_OK;    
 }
+/* }}} */
 
 void c_storage_flush() {
     pthread_rwlock_rdlock(&(shared_header->rlock));
@@ -365,7 +371,5 @@ void c_storage_flush() {
     }
     pthread_rwlock_unlock(&(shared_header->rlock));
 }
-
-
-
+/* }}} */
 

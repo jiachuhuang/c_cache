@@ -226,6 +226,7 @@ error:
 
 	return C_CACHE_FAIL;
 }
+/* }}} */
 
 static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name) {
 	unsigned long alloc_size;
@@ -233,6 +234,7 @@ static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_se
 	unlink(shared_name);
 	free(*shared_segments);
 }
+/* }}} */
 
 
 #endif /* USE_MMAP */
