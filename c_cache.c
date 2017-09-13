@@ -31,6 +31,19 @@ int c_cache_set(char *key, unsigned int len, void *data, unsigned int size, unsi
 	return c_storage_update(key, len, data, size, ttl, 0, tv);
 }
 
+int c_cache_add(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl) {
+	time_t tv;
+	tv = time((time_t *)NULL);
+
+	if(ttl <= 0) {
+		ttl = (unsigned int)tv + 2 * 60 * 60;
+	} else {
+		ttl += tv;
+	}
+
+	return c_storage_update(key, len, data, size, ttl, 1, tv);
+}
+
 void c_cache_flush() {
 	c_storage_flush();
 }
@@ -62,9 +75,11 @@ int main(int argc, char const *argv[]) {
 		memcpy(resutl, data, 3);
 		resutl[3] = '\0';
 		printf("get: %s\n", resutl);
-		printf("%d\n", shared_header->segment_num);
+		printf("%d %d\n", shared_header->miss, shared_header->hits);
 	}
-	c_storage_shutdown();
+	// sleep(10*60);
+	// c_storage_shutdown();
+
 	return 0;
 }
 

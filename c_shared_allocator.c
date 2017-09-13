@@ -3,7 +3,6 @@
 #include "c_shared_allocator.h"
 
 #include <pthread.h>
-
 #include <stdio.h>
 
 #ifdef USE_MMAP
@@ -62,15 +61,5 @@ found:
 	*offset = pos;
 	return (void*) ((*shared_segments)[current].p + pos);
 }
-
-
-
-
-
-
-
-
-
-
 
 
