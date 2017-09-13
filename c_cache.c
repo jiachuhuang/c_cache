@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <pthread.h>
-
+#include <unistd.h>
 #include <time.h>
 
 extern c_shared_header *shared_header;
@@ -54,14 +54,16 @@ int main(int argc, char const *argv[]) {
 
 	char resutl[4];
 
-	ret = c_cache_set(key, (unsigned int)strlen(key), (void*)"hjc", strlen("hjc"), 30);
-	printf("set: %d\n", ret);
+	// ret = c_cache_set(key, (unsigned int)strlen(key), (void*)"hjc", strlen("hjc"), 0);
+	// printf("set: %d\n", ret);
 	ret = c_cache_get(key, (unsigned int)strlen(key), &data, &size);
-	memcpy(resutl, data, 3);
-	resutl[3] = '\0';
-	printf("get: %s\n", resutl);
-	printf("%d\n", shared_header->segment_num);
 
+	if(ret) {
+		memcpy(resutl, data, 3);
+		resutl[3] = '\0';
+		printf("get: %s\n", resutl);
+		printf("%d\n", shared_header->segment_num);
+	}
 	c_storage_shutdown();
 	return 0;
 }

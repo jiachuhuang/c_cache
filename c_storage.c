@@ -284,6 +284,9 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
         }
 
         if(k->crc == c_storage_crc32((char*)data, size)) {
+            if(!add) {
+                k->ttl = ttl;
+            }
             USE_FREE(v);
             pthread_rwlock_unlock(&(shared_header->wlock));          
             return C_CACHE_OK;
