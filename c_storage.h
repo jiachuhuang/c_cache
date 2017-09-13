@@ -26,6 +26,10 @@ typedef struct {
 typedef struct {
 	unsigned int pos;
 	unsigned int size;
+} c_shared_segment_header;
+
+typedef struct {
+	c_shared_segment_header *seg_header;
 	void *p;
 } c_shared_segment;
 

@@ -21,3 +21,51 @@ int c_cache_allocator_startup(void **p, c_shared_header **shared_header, c_share
 
 	return C_CACHE_OK;
 }
+
+void c_cache_allocator_shutdown(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments) {
+
+	detach_shmmap(p, shared_header, shared_segments);
+}
+
+void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segment **shared_segments, const unsigned int real_size, const unsigned int hash, unsigned int *seg) {
+	unsigned int segment_num, size, pos;
+	int i, current, max_try;
+
+	current = hash & (segment_num - 1);
+
+	max_try = segment_num > 4? 4: segment_num;
+
+	do {
+		if(!(*shared_segments[current]).seg_header) {
+			goto newcur;
+		}
+		size = (*shared_segments[current]).seg_header->size;
+		pos = (*shared_segments[current]).seg_header->pos;
+
+		if(real_size >= (size - pos)) {
+			goto found;
+		}
+newcur:
+		current = (current + 1) & (segment_num - 1);	
+	} while(--max_try);
+
+	(*shared_segments[current]).seg_header->pos = 0;
+	size = (*shared_segments[current]).seg_header->size;
+	pos = 0;
+
+found:
+	(*shared_segments[current]).seg_header->pos = pos + real_size;
+	return (void*) ((*shared_segments[current]).p + pos);
+}
+
+
+
+
+
+
+
+
+
+
+
+

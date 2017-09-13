@@ -17,13 +17,22 @@
 static int create_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in) {
 	unsigned long header_size, alloc_size, segment_size, segments_num = 1024, v_offset;
 	int fd;
-	int try = 0, create;
+	int try = 0, create, segment_body_size;
 
 	pthread_rwlockattr_t rwattr;
 
 	k_size = C_ALLOC_ALIGNED_SIZE(k_size);
 	v_size = C_ALLOC_ALIGNED_SIZE(v_size);
 	header_size = (unsigned long)sizeof(c_shared_header);
+
+	while ((v_size / segments_num) < C_STORAGE_MIN_SEGMENT_SIZE) {
+		segments_num >>= 1;
+	}
+
+	segment_size = v_size / segments_num;
+	++segments_num;
+
+	v_size = segments_num * segment_size;
 
 	alloc_size = header_size + k_size + v_size;
 
@@ -59,14 +68,6 @@ new:
 	}	
 
 	close(fd);
-
-	while ((v_size / segments_num) < C_STORAGE_MIN_SEGMENT_SIZE) {
-		segments_num >>= 1;
-	}
-
-	segment_size = v_size / segments_num;
-	++segments_num;
-
 
 	// init shared header
 	*shared_header = (c_shared_header *)*p;
@@ -117,12 +118,24 @@ new:
 
 	// init shared_segments
 	for (int i = 0; i < segments_num; ++i) {
-		(*shared_segments)[i].pos = 0;
-		(*shared_segments)[i].p = *p + v_offset + i * segment_size;		
-		if( alloc_size >= (v_offset + i * segment_size + segment_size) ) {
-			(*shared_segments)[i].size = segment_size;
+		(*shared_segments)[i].p = *p + v_offset + i * segment_size;	
+		
+		segment_body_size = alloc_size - (v_offset + i * segment_size + segment_size);
+
+		if( segment_body_size >= 0 ) {
+			(*shared_segments)[i].seg_header = (c_shared_segment_header*)((*shared_segments)[i].p);
+			(*shared_segments)[i].seg_header->size = segment_body_size;
+			(*shared_segments)[i].seg_header->pos = 0;
 		} else {
-			(*shared_segments)[i].size = alloc_size - (v_offset + i * segment_size);
+			segment_body_size = alloc_size - (v_offset + i * segment_size) - sizeof(c_shared_segment_header);
+
+			if(segment_body_size >= 0) {
+				(*shared_segments)[i].seg_header = (c_shared_segment_header*)((*shared_segments)[i].p);
+				(*shared_segments)[i].seg_header->size = segment_body_size;
+				(*shared_segments)[i].seg_header->pos = 0;
+			} else {
+				(*shared_segments)[i].seg_header = NULL;
+			}
 		}
 	}
 
@@ -164,6 +177,9 @@ exist:
 
 	*shared_segments = (c_shared_segment *)calloc(1, segments_num * sizeof(c_shared_segment));
 
+	segments_num = *shared_header->segment_num;
+	segment_size = *shared_header->segment_size;
+
 	if(!*shared_segments) {
 		*error_in = "calloc";
 		goto error;
@@ -171,12 +187,20 @@ exist:
 
 	// init shared_segments
 	for (int i = 0; i < segments_num; ++i) {
-		(*shared_segments)[i].pos = 0;
-		(*shared_segments)[i].p = *p + v_offset + i * segment_size;		
-		if( alloc_size >= (v_offset + i * segment_size + segment_size) ) {
-			(*shared_segments)[i].size = segment_size;
+		(*shared_segments)[i].p = *p + v_offset + i * segment_size;	
+
+		segment_body_size = alloc_size - (v_offset + i * segment_size + segment_size);
+
+		if( segment_body_size >= 0 ) {
+			(*shared_segments)[i].seg_header = (c_shared_segment_header*)((*shared_segments)[i].p);
 		} else {
-			(*shared_segments)[i].size = alloc_size - (v_offset + i * segment_size);
+			segment_body_size = alloc_size - (v_offset + i * segment_size) - sizeof(c_shared_segment_header);
+
+			if(segment_body_size >= 0) {
+				(*shared_segments)[i].seg_header = (c_shared_segment_header*)((*shared_segments)[i].p);
+			} else {
+				(*shared_segments)[i].seg_header = NULL;
+			}
 		}
 	}	
 
@@ -201,7 +225,7 @@ error:
 	return C_CACHE_FAIL;
 }
 
-static void detach_segment(c_shared_segment *segment) {
+static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments) {
 
 }
 
