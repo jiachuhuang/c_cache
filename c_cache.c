@@ -31,6 +31,14 @@ int c_cache_set(char *key, unsigned int len, void *data, unsigned int size, unsi
 	return c_storage_update(key, len, data, size, ttl, 0, tv);
 }
 
+void c_cache_flush() {
+	c_storage_flush();
+}
+
+int c_cache_delete(char *key, unsigned int len) {
+	return c_storage_delete(key, len);
+}
+
 int main(int argc, char const *argv[]) {
 	char *error;
 	unsigned int ks = 512*1024*1024;
@@ -39,7 +47,7 @@ int main(int argc, char const *argv[]) {
 	c_storage_startup("/tmp/shartest.tmp1", ks, vs, &error);
 	printf("%s\n", error);
 	
-	char *key = "abc";
+	char *key = "abd";
 	void *data;
 	unsigned int size;
 	int ret;
