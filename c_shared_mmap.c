@@ -225,8 +225,13 @@ error:
 	return C_CACHE_FAIL;
 }
 
-static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments) {
-
+static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name) {
+	unsigned long header_size, alloc_size;
+	header_size = (unsigned long)sizeof(c_shared_header);
+	alloc_size = header_size + *shared_header->k_size + *shared_header->v_size;
+	munmap(*p, alloc_size);
+	unlink(shared_name);
+	free(*shared_segments);
 }
 
 
