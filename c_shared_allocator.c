@@ -27,7 +27,7 @@ void c_cache_allocator_shutdown(void **p, c_shared_header **shared_header, c_sha
 	detach_shmmap(p, shared_header, shared_segments, shared_name);
 }
 
-void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segment **shared_segments, const unsigned int real_size, const unsigned int hash, unsigned int *seg) {
+void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segment **shared_segments, const unsigned int real_size, const unsigned int hash, unsigned int *seg, unsigned long *offset) {
 	unsigned int segment_num, size, pos;
 	int i, current, max_try;
 
@@ -55,6 +55,8 @@ newcur:
 
 found:
 	(*shared_segments[current]).seg_header->pos = pos + real_size;
+	*seg = current;
+	*offset = pos;
 	return (void*) ((*shared_segments[current]).p + pos);
 }
 

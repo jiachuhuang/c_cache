@@ -77,6 +77,8 @@ new:
 	*shared_header->k_size = k_size;
 	*shared_header->v_size = v_size;
 
+	*shared_header->alloc_size = alloc_size;
+
 	*shared_header->segment_num = segments_num;
 	*shared_header->segment_size = segment_size;
 
@@ -226,10 +228,8 @@ error:
 }
 
 static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name) {
-	unsigned long header_size, alloc_size;
-	header_size = (unsigned long)sizeof(c_shared_header);
-	alloc_size = header_size + *shared_header->k_size + *shared_header->v_size;
-	munmap(*p, alloc_size);
+	unsigned long alloc_size;
+	munmap(*p, *shared_header->alloc_size);
 	unlink(shared_name);
 	free(*shared_segments);
 }
