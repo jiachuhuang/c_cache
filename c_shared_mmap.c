@@ -5,7 +5,7 @@
 
 #ifdef USE_MMAP
 
-#include <pthead.h>
+#include <pthread.h>
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -72,18 +72,18 @@ new:
 	// init shared header
 	*shared_header = (c_shared_header *)*p;
 	
-	*shared_header->init = 0;
+	(*shared_header)->init = 0;
 
-	*shared_header->k_size = k_size;
-	*shared_header->v_size = v_size;
+	(*shared_header)->k_size = k_size;
+	(*shared_header)->v_size = v_size;
 
-	*shared_header->alloc_size = alloc_size;
+	(*shared_header)->alloc_size = alloc_size;
 
-	*shared_header->segment_num = segments_num;
-	*shared_header->segment_size = segment_size;
+	(*shared_header)->segment_num = segments_num;
+	(*shared_header)->segment_size = segment_size;
 
-	*shared_header->k_offset = (unsigned long)sizeof(c_shared_header);
-	v_offset = *shared_header->v_offset = *shared_header->k_offset + *shared_header->k_size;
+	(*shared_header)->k_offset = (unsigned long)sizeof(c_shared_header);
+	v_offset = (*shared_header)->v_offset = (*shared_header)->k_offset + (*shared_header)->k_size;
 
 	// init header lock
 	if(pthread_rwlockattr_init(&rwattr) != 0) {
@@ -96,14 +96,14 @@ new:
 		goto pthreaderr;
 	}	
 
-	if(pthread_rwlock_init(&(*shared_header->rlock), &rwattr) != 0) {
+	if(pthread_rwlock_init(&((*shared_header)->rlock), &rwattr) != 0) {
 		*error_in = "pthread_rwlock_init";
 		goto pthreaderr;
 	}
 
-	if(pthread_rwlock_init(&(*shared_header->wlock), &rwattr) != 0) {
+	if(pthread_rwlock_init(&((*shared_header)->wlock), &rwattr) != 0) {
 		*error_in = "pthread_rwlock_init";
-		pthread_rwlock_destroy(&(*shared_header->rlock));
+		pthread_rwlock_destroy(&((*shared_header)->rlock));
 		goto pthreaderr;
 	}
 
@@ -113,8 +113,8 @@ new:
 
 	if(!*shared_segments) {
 		*error_in = "calloc";
-		pthread_rwlock_destroy(&(*shared_header->rlock));
-		pthread_rwlock_destroy(&(*shared_header->wlock));
+		pthread_rwlock_destroy(&((*shared_header)->rlock));
+		pthread_rwlock_destroy(&((*shared_header)->wlock));
 		goto error;
 	}
 
@@ -141,7 +141,7 @@ new:
 		}
 	}
 
-	*shared_header->init = 1;
+	(*shared_header)->init = 1;
 	return C_CACHE_OK;
 
 exist:
@@ -168,7 +168,7 @@ exist:
 	int retry = 3;
 
 	while(retry--) {
-		if(*shared_header->init == 1) {
+		if((*shared_header)->init == 1) {
 			break;
 		} else if(!retry) {
 			*error_in = "timeout";
@@ -179,8 +179,8 @@ exist:
 
 	*shared_segments = (c_shared_segment *)calloc(1, segments_num * sizeof(c_shared_segment));
 
-	segments_num = *shared_header->segment_num;
-	segment_size = *shared_header->segment_size;
+	segments_num = (*shared_header)->segment_num;
+	segment_size = (*shared_header)->segment_size;
 
 	if(!*shared_segments) {
 		*error_in = "calloc";
@@ -229,7 +229,7 @@ error:
 
 static void detach_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name) {
 	unsigned long alloc_size;
-	munmap(*p, *shared_header->alloc_size);
+	munmap(*p, (*shared_header)->alloc_size);
 	unlink(shared_name);
 	free(*shared_segments);
 }

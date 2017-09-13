@@ -2,7 +2,7 @@
 #include "c_storage.h"
 #include "c_shared_allocator.h"
 
-#include <pthead.h>
+#include <pthread.h>
 
 #ifdef USE_MMAP
 	#include "c_shared_mmap.c"

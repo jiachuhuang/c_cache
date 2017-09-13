@@ -1,4 +1,5 @@
-#include <pthead.h>
+#include <pthread.h>
+#include <stdlib.h>
 
 #ifndef C_STORAGE_H
 #define C_STORAGE_H
@@ -60,7 +61,7 @@ typedef struct {
 	c_kv_val val;
 } c_kv_key;
 
-int c_storage_startup(unsigned int k_size, unsigned int v_size, unsigned char **msg);
+int c_storage_startup(unsigned int k_size, unsigned int v_size, char **msg);
 void c_storage_shutdown();
 int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,/* unsigned int *flag,*/ unsigned long tv);
 int c_storage_update(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl,/* unsigned int *flag,*/ unsigned int add, unsigned long tv);

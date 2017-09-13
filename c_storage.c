@@ -176,7 +176,7 @@ static inline unsigned int c_storage_crc32(char *data, unsigned int size) /* {{{
 }
 /* }}} */
 
-int c_storage_startup(unsigned int k_size, unsigned int v_size, unsigned char **msg) {
+int c_storage_startup(unsigned int k_size, unsigned int v_size, char **msg) {
 
     if(!c_cache_allocator_startup(&p, &shared_header, &shared_segments, shared_name, k_size, v_size, msg)) {
         return C_CACHE_FAIL;
@@ -336,7 +336,6 @@ int c_storage_delete(char *key, unsigned int len) {
     if(k->val.len) {
         if(k->len == len && !memcmp(key, k->key, len)) {
             k->ttl = 1;
-            k->val = {0};
         }
     }
 
@@ -347,7 +346,7 @@ int c_storage_delete(char *key, unsigned int len) {
 void c_storage_flush() {
     pthread_rwlock_rdlock(&(shared_header->rlock));
 
-    memset(shared_header->k_offset, 0, shared_header->k_size);
+    memset((p + shared_header->k_offset), 0, shared_header->k_size);
     for (int i = 0; i <= C_STORAGE_SEGMENT_NUM(shared_header); ++i) {
         if((shared_segments)[i].seg_header){
             (shared_segments)[i].seg_header->pos = 0;
