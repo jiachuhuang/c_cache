@@ -4,9 +4,6 @@
 
 #define USE_MMAP 1
 
-#define C_ALLOC_ALIGNMENT 					8
-#define C_ALLOC_ALIGNMENT_MARK				~(C_ALLOC_ALIGNMENT - 1)
-
 #define C_ALLOC_FILE_MODEL					(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)
 #define C_ALLOC_FILE_OPEN_CREAT_FLAG		(O_CREAT | O_EXCL | O_RDWR)
 #define C_ALLOC_FILE_OPEN_FLAG				(O_RDWR)
@@ -16,8 +13,6 @@
 #else 
 	#error(no builtin shared memory supported)	
 #endif /* USE_MMAP */				
-
-#define C_ALLOC_ALIGNED_SIZE(x)				(((x) + C_ALLOC_ALIGNMENT - 1) & C_ALLOC_ALIGNMENT_MARK)
 
 int c_cache_allocator_startup(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in);
 void c_cache_allocator_shutdown(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name);

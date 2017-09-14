@@ -13,16 +13,20 @@
 #include <sys/types.h>  
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <math.h>
 
 static int create_shmmap(void **p, c_shared_header **shared_header, c_shared_segment **shared_segments, const char *shared_name, unsigned long k_size, unsigned long v_size, char **error_in) {
-	unsigned long header_size, alloc_size, segment_size, segments_num = 1024, v_offset;
+	unsigned long header_size, alloc_size, segment_size, segments_num = 1024, v_offset, k_num;
 	int fd;
-	int try = 0, create, segment_body_size;
+	int try = 0, create, segment_body_size, k_len;
 
 	pthread_rwlockattr_t rwattr;
+	
+	k_len = sizeof(c_kv_key);
+	k_num = k_size / k_len;
+	k_num = pow(2, floor(log10(k_num)/log10(2)));
+	k_size = k_num * k_len;
 
-	k_size = C_ALLOC_ALIGNED_SIZE(k_size);
-	v_size = C_ALLOC_ALIGNED_SIZE(v_size);
 	header_size = (unsigned long)sizeof(c_shared_header);
 
 	while ((v_size / segments_num) < C_STORAGE_MIN_SEGMENT_SIZE) {
@@ -30,8 +34,7 @@ static int create_shmmap(void **p, c_shared_header **shared_header, c_shared_seg
 	}
 
 	segment_size = v_size / segments_num;
-	++segments_num;
-
+	segments_num = pow(2, floor(log10(segments_num)/log10(2)));
 	v_size = segments_num * segment_size;
 
 	alloc_size = header_size + k_size + v_size;

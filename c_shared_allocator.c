@@ -33,7 +33,7 @@ void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segm
 	int i, current, max_try;
 
 	segment_num = C_STORAGE_SEGMENT_NUM(*shared_header);
-	current = hash % (segment_num - 1);
+	current = hash & (segment_num - 1);
 
 	max_try = segment_num > 4? 4: segment_num;
 
@@ -48,7 +48,7 @@ void *c_cache_allocator_raw_alloc(c_shared_header **shared_header, c_shared_segm
 			goto found;
 		}
 newcur:
-		current = (current + 1) % (segment_num - 1);	
+		current = (current + 1) & (segment_num - 1);	
 	} while(--max_try);
 
 	(*shared_segments)[current].seg_header->pos = 0;

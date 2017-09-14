@@ -207,7 +207,7 @@ int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash % (kv_num - 1);
+    k_index = hash & (kv_num - 1);
 
     pthread_rwlock_rdlock(&(shared_header->rlock));
 
@@ -262,7 +262,7 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash % (kv_num - 1);
+    k_index = hash & (kv_num - 1);
 
     pthread_rwlock_wrlock(&(shared_header->wlock));
 
@@ -343,7 +343,7 @@ int c_storage_delete(char *key, unsigned int len) {
     kv_num = k_size / kv_len;
 
     hash = c_cache_hash_func(key, len);
-    k_index = hash % (kv_num - 1);
+    k_index = hash & (kv_num - 1);
 
     pthread_rwlock_rdlock(&(shared_header->rlock));
 
