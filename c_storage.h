@@ -10,6 +10,7 @@
 
 #define C_STORAGE_MISS(x) (++((x)->miss))
 #define C_STORAGE_HITS(x) (++((x)->hits))
+#define C_STORAGE_KEY_NUM(x) ((x)->k_num)
 #define C_STORAGE_SEGMENT_NUM(x) ((x)->segment_num)
 #define C_STORAGE_SEGMENT_SIZE(x) ((x)->segment_size)
 
@@ -25,6 +26,7 @@ typedef struct {
 	unsigned long k_size;
 	unsigned long v_size;
 	unsigned long alloc_size;
+	unsigned int k_num;
 	unsigned int segment_num;
 	unsigned int segment_size;
 	unsigned int miss; 

@@ -82,6 +82,8 @@ new:
 
 	(*shared_header)->alloc_size = alloc_size;
 
+	(*shared_header)->k_num = k_num;
+
 	(*shared_header)->segment_num = segments_num;
 	(*shared_header)->segment_size = segment_size;
 

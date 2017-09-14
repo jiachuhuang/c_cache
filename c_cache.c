@@ -54,32 +54,12 @@ int c_cache_delete(char *key, unsigned int len) {
 
 int main(int argc, char const *argv[]) {
 	char *error;
-	unsigned int ks = 512*1024*1024;
+	unsigned int ks = 256*1024*1024;
 	unsigned int vs = 1024*1024*1024;
 
 	c_storage_startup("/tmp/shartest.tmp1", ks, vs, &error);
-	printf("%s\n", error);
 	
-	char *key = "abd";
-	void *data;
-	unsigned int size;
-	int ret;
-
-	char resutl[4];
-
-	// ret = c_cache_set(key, (unsigned int)strlen(key), (void*)"hjc", strlen("hjc"), 0);
-	// printf("set: %d\n", ret);
-	ret = c_cache_get(key, (unsigned int)strlen(key), &data, &size);
-
-	if(ret) {
-		memcpy(resutl, data, 3);
-		resutl[3] = '\0';
-		printf("get: %s\n", resutl);
-		printf("%d %d\n", shared_header->miss, shared_header->hits);
-	}
-	// sleep(10*60);
-	// c_storage_shutdown();
-
+	c_storage_shutdown();
 	return 0;
 }
 

@@ -197,14 +197,13 @@ void c_storage_shutdown() {
 int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,/* unsigned int *flag,*/ unsigned long tv) {
     
     unsigned int hash, kv_len, k_index;
-    unsigned long k_offset, k_size, kv_num;
+    unsigned long k_offset, kv_num;
     c_kv_key *k;
     void *v;
 
     k_offset = shared_header->k_offset;
-    k_size = shared_header->k_size;
     kv_len = sizeof(c_kv_key);
-    kv_num = k_size / kv_len;
+    kv_num = C_STORAGE_KEY_NUM(shared_header);
 
     hash = c_cache_hash_func(key, len);
     k_index = hash & (kv_num - 1);
@@ -248,7 +247,7 @@ miss:
 int c_storage_update(char *key, unsigned int len, void *data, unsigned int size, unsigned int ttl,/* unsigned int *flag,*/ unsigned int add, unsigned long tv) {
 
     unsigned int hash, kv_len, k_index, segment_index;
-    unsigned long k_offset, k_size, kv_num, offset;
+    unsigned long k_offset, kv_num, offset;
     c_kv_key *k;
     void *v;
    
@@ -257,9 +256,8 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
     }
 
     k_offset = shared_header->k_offset;
-    k_size = shared_header->k_size;
     kv_len = sizeof(c_kv_key);
-    kv_num = k_size / kv_len;
+    kv_num = C_STORAGE_KEY_NUM(shared_header);
 
     hash = c_cache_hash_func(key, len);
     k_index = hash & (kv_num - 1);
@@ -334,13 +332,12 @@ insert:
 int c_storage_delete(char *key, unsigned int len) {
 
     unsigned int hash, kv_len, k_index;
-    unsigned long k_offset, k_size, kv_num;
+    unsigned long k_offset, kv_num;
     c_kv_key *k;
 
     k_offset = shared_header->k_offset;
-    k_size = shared_header->k_size;
     kv_len = sizeof(c_kv_key);
-    kv_num = k_size / kv_len;
+    kv_num = C_STORAGE_KEY_NUM(shared_header);
 
     hash = c_cache_hash_func(key, len);
     k_index = hash & (kv_num - 1);
