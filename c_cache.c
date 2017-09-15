@@ -58,7 +58,7 @@ int main(int argc, char const *argv[]) {
 	unsigned int vs = 1024*1024*1024;
 
 	c_storage_startup("/tmp/shartest.tmp1", ks, vs, &error);
-	
+	c_cache_flush();
 	c_storage_shutdown();
 	return 0;
 }

@@ -361,7 +361,7 @@ void c_storage_flush() {
     pthread_rwlock_rdlock(&(shared_header->rlock));
 
     memset((p + shared_header->k_offset), 0, shared_header->k_size);
-    for (int i = 0; i <= C_STORAGE_SEGMENT_NUM(shared_header); ++i) {
+    for (int i = 0; i < C_STORAGE_SEGMENT_NUM(shared_header); ++i) {
         if((shared_segments)[i].seg_header){
             (shared_segments)[i].seg_header->pos = 0;
         }
