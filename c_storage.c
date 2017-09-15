@@ -217,7 +217,7 @@ int c_storage_find(char *key, unsigned int len, void **data, unsigned int *size,
             goto miss;
         }
 
-        if(k->val.segment_index > C_STORAGE_SEGMENT_NUM(shared_header)) {
+        if(k->val.segment_index >= C_STORAGE_SEGMENT_NUM(shared_header)) {
             goto miss;
         }
 
@@ -272,7 +272,7 @@ int c_storage_update(char *key, unsigned int len, void *data, unsigned int size,
             goto insert;
         }
 
-        if(k->val.segment_index > C_STORAGE_SEGMENT_NUM(shared_header)) {
+        if(k->val.segment_index >= C_STORAGE_SEGMENT_NUM(shared_header)) {
             pthread_rwlock_unlock(&(shared_header->wlock));
             return C_CACHE_FAIL;
         }
